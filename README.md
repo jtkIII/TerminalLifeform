@@ -1,12 +1,3 @@
-Excellent — using `uv` and `pyproject.toml` is a very modern and clean setup. That gives your project a great developer experience out of the gate.
-
-Here’s how we’ll adapt the README to match your setup, while preserving the flavor and making it easy to onboard new contributors or curious nerds:
-
----
-
-### ✅ Updated `README.md` (for `uv` users)
-
-````markdown
 # TerminalLifeform
 
 **TerminalLifeform** is a terminal-native simulation about survival, entropy, and watching little digital lifeforms succeed (or fail).
