@@ -2,8 +2,8 @@
 
 **TerminalLifeform** is a terminal-native simulation about survival, entropy, and watching little digital lifeforms succeed (or fail).
 
-**Entities live and die.**  
-**Sometimes they thrive.**  
+**Ents live and they die.**  
+**Sometimes they even can thrive.**  
 **Usually, they die.**
 
 ![screenshot](docs/screenshot.png)
