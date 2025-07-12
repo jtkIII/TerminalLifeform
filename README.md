@@ -55,19 +55,12 @@ MIT – open-ended digital life is for everyone.
 
 ---
 
-*Created by [@jtkIII](https://github.com/jtkIII). Contributions, forks, and weird extensions welcome.*
-
-```
-
----
-
 ### 📎 Latest List
 
 - ✅ `docs/screenshot.png`
 - ✅ `added requirements.txt` for users who don't use `uv` 
 - ✅ Mentioned `uv` in `pyproject.toml`'s `[tool]` section
 
----
 
 ## 🛠 Roadmap Ideas
 
@@ -76,3 +69,7 @@ MIT – open-ended digital life is for everyone.
 * [ ] Visualization or external UI (textual? curses? pygame?)
 * [ ] Entity logging or journaling
 * [x] Terminal-only chaos engine
+
+---
+
+*Created by [@jtkIII](https://github.com/jtkIII). Contributions, forks, and weird extensions welcome.*
