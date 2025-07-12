@@ -1,4 +1,4 @@
-# Terminal Lifeform (or your preferred name)
+# Terminal Lifeform
 
 > A terminal-based simulation sandbox where entities fight, evolve, and sometimes just... perish.
 
@@ -15,7 +15,7 @@
 ## Installation
 
 ```bash
-git clone https://github.com/yourname/simname.git
-cd simname
-pip install -r requirements.txt
-python main.py
+git clone https://github.com/jtkIII/TerminalLifeform
+cd TerminalLifeform
+uv init
+python src/main.py
