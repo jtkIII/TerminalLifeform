@@ -1,10 +1,10 @@
-# TerminalLifeform
+# Terminal Lifeform
 
 **TerminalLifeform** is a terminal-native simulation about survival, entropy, and watching little digital lifeforms succeed (or fail).
 
 **Entities live and die.**  
 **Sometimes they thrive.**  
-**Usually, they perish.**
+**Usually, they die.**
 
 ![screenshot](docs/screenshot.png)
 
@@ -12,11 +12,11 @@
 
 ## 🧬 Features
 
-🔁 Terminal UI (with color, progress bars, status indicators)
-🧬 Object-oriented and modular design
-🌡 Entities, parameters, and behavior all easily customizable
-🌈 Built using [uv](https://github.com/astral-sh/uv) and `pyproject.toml` 
-⚙️ fast, modern Python tooling
+- 🔁 Terminal UI (with color, progress bars, status indicators)
+- 🧬 Object-oriented and modular design
+- 🌡 Entities, parameters, and behavior all easily customizable
+- 🌈 Built using [uv](https://github.com/astral-sh/uv) and `pyproject.toml` 
+- ⚙️ fast, modern Python tooling
 
 ---
 
@@ -49,16 +49,6 @@ python src/main.py
 
 ---
 
-## 🛠 Roadmap Ideas
-
-* [ ] Entity evolution
-* [ ] Save/load state
-* [ ] Visualization or external UI (textual? curses? pygame?)
-* [ ] Entity logging or journaling
-* [x] Terminal-only chaos engine
-
----
-
 ## 📄 License
 
 MIT – open-ended digital life is for everyone.
@@ -78,3 +68,11 @@ MIT – open-ended digital life is for everyone.
 - ✅ Mentioned `uv` in `pyproject.toml`'s `[tool]` section
 
 ---
+
+## 🛠 Roadmap Ideas
+
+* [ ] Entity evolution
+* [ ] Save/load state
+* [ ] Visualization or external UI (textual? curses? pygame?)
+* [ ] Entity logging or journaling
+* [x] Terminal-only chaos engine
