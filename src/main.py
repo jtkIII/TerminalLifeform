@@ -5,7 +5,7 @@ from colored import Back, Fore, Style
 from tqdm import tqdm
 
 from entity import Entity
-from entity_utils import calculate_energy_change, calculate_health_change
+from entity_utils import calc_energy_change, calc_health_change, validate_entity_params
 from logging_config import setup_logger
 from params import (
     default_environment_factors,
@@ -14,6 +14,7 @@ from params import (
     random_parameters,
     sim_env_params,
 )
+from stats import birth_tracker, death_tracker
 
 logger = setup_logger(__name__)
 
@@ -26,21 +27,10 @@ class Simulation:
     def __init__(self, initial_entities=5, time_steps=1000, environment_params=None):
         self.entities = []
         self.current_time = 0
+        self.total_entities = 0
         self.total_time_steps = time_steps
-        """
-        Initializes the simulation.
-
-        Args:
-            initial_entities (int): Number of entities to start with.
-            time_steps (int): Total number of Epochs to run the simulation.
-            environment_params (dict, optional): Initial environmental factors.
-        """
-        self.entities = []
-        self.current_time = 0
-        self.total_time_steps = time_steps
-
-        # Use imported default_environment_factors
         self.environment_factors = default_environment_factors.copy()
+
         if environment_params:
             self.environment_factors.update(environment_params)
 
@@ -50,15 +40,15 @@ class Simulation:
 
         logger.info(f"Simulation initialized with {len(self.entities)} entities.")
 
-    def add_entity(self, entity):
-        """Adds a new entity to the simulation."""
+    def add_entity(self, entity: Entity):
+        validate_entity_params(entity.parameters)
         self.entities.append(entity)
-        logger.info(f"Added new entity: {entity.id}")
+        self.total_entities += 1
+        logger.info(f"Added new entity: {entity.id}: {entity.name}")
 
     def _update_environment(self):
         """
         Updates environmental factors over time or based on random events.
-        This is a simple example; could be much more complex.
         """
 
         # Gradual changes over time
@@ -84,7 +74,8 @@ class Simulation:
                     1.0, self.environment_factors["resource_availability"] + 0.2
                 )
                 logger.info(
-                    f"Time {self.current_time}: {Back.yellow}Environmental Event - Resource Spike!{Style.reset}"
+                    f"Time {self.current_time}: {Back.yellow}Environmental Event - \
+                     Resource Spike! {Style.reset}"
                 )
             elif event_type == "disease_outbreak":
                 # Reduce health of a random subset of entities
@@ -92,7 +83,8 @@ class Simulation:
                     if entity.is_alive():
                         entity.health = max(0, entity.health - random.uniform(10, 30))
                 logger.info(
-                    f"Time {self.current_time}: {Back.red} Environmental Event - Disease Outbreak! {Style.reset}"
+                    f"Time {self.current_time}: {Back.red} Environmental Event \
+                     - Disease Outbreak! {Style.reset}"
                 )
             elif event_type == "heatwave":
                 self.environment_factors["temperature"] = min(
@@ -100,12 +92,16 @@ class Simulation:
                     self.environment_factors["temperature"] + random.uniform(5, 10),
                 )
                 logger.info(
-                    f"Time {self.current_time}: {Back.red} Environmental Event - Heatwave! {Style.reset}"
+                    f"Time {self.current_time}: {Back.red} Environmental Event \
+                     - Heatwave! {Style.reset}"
                 )
 
         # Dynamic Event: Predator if population is too high
         alive_count = len([e for e in self.entities if e.is_alive()])
-        if alive_count > self.environment_factors["predator_threshold"]:
+        if (
+            alive_count > self.environment_factors["predator_threshold"]
+            and random.random() > self.environment_factors["predator_chance"]
+        ):
             num_to_remove = int(
                 alive_count * self.environment_factors["predator_impact_percentage"]
             )
@@ -113,7 +109,6 @@ class Simulation:
                 1, num_to_remove
             )  # Ensure at least one entity is removed if threshold is met
 
-            # Select entities to be removed/damaged by predator
             # Prioritize struggling entities if possible, otherwise random
             struggling_entities = [
                 e for e in self.entities if e.status == "struggling" and e.is_alive()
@@ -130,24 +125,23 @@ class Simulation:
                 entity.health = 0  # Predator instantly kills
                 entity.update_status()  # Mark as dead
                 logger.info(
-                    f"{Style.BOLD}{Fore.cyan} Time {self.current_time}: Dynamic Event - Predator! Entity {entity.id} was removed.{Style.reset}"
+                    f"{Style.BOLD}{Fore.cyan} Time {self.current_time}: \
+                     Dynamic Event - Predator! Entity {entity.id} was removed.{Style.reset}"
                 )
 
     def _process_entity(self, entity):
         """
         Applies all updates to a single entity for the current Epoch.
         """
+
         if not entity.is_alive():
             return  # Skip dead entities
 
         entity.age += 1
-
-        energy_change = calculate_energy_change(entity, self.environment_factors)
+        energy_change = calc_energy_change(entity, self.environment_factors)
         entity.energy = max(0.0, min(100.0, entity.energy + energy_change))
-
-        health_change = calculate_health_change(entity, self.environment_factors)
+        health_change = calc_health_change(entity, self.environment_factors)
         entity.health = max(0.0, min(100.0, entity.health + health_change))
-
         entity.update_status()
 
     def _handle_interactions(self):
@@ -158,7 +152,11 @@ class Simulation:
         num_alive = len(alive_entities)
 
         if num_alive < 2:
-            return  # No interactions if less than 2 entities
+            # No interactions if less than 2 entities
+            logger.info(
+                f"{Style.BOLD}{Fore.cyan}No entities to interact with.{Style.reset}"
+            )
+            return
 
         # Interaction intensity increases with population density and low resources
         interaction_modifier = (
@@ -245,8 +243,10 @@ class Simulation:
                 new_value = max(config["min"], min(config["max"], new_value))
 
                 mutated_params[param_name] = new_value
+
                 logger.info(
-                    f" {Fore.magenta} {Style.BOLD} Mutation: Parameter '{param_name}' changed from {original_value:.2f} to {new_value:.2f}{Style.reset}"
+                    f" {Fore.magenta} {Style.BOLD} Mutation: Parameter '{param_name}' \
+                     changed from {original_value:.2f} to {new_value:.2f}{Style.reset}"
                 )
 
         return mutated_params
@@ -268,33 +268,37 @@ class Simulation:
                 # Apply mutations to offspring parameters
                 offspring_params = self._apply_mutation(offspring_params)
 
-                # Initial health/energy can still have some randomness
                 offspring_params["initial_health"] = random.uniform(80, 100)
                 offspring_params["initial_energy"] = random.uniform(80, 100)
 
                 new_entity = Entity(offspring_params)
                 new_entities.append(new_entity)
-                logger.info(
-                    f" {Back.red}Time {self.current_time}: Entity {entity.id} reproduced! New entity {new_entity.id} born.{Style.reset}"
-                )
+                self.total_entities += 1
+                entity.health -= 3.0  # Parent loses some health after reproduction
+                birth_tracker(entity, new_entity, self.current_time)
+
         self.entities.extend(new_entities)
 
     def run_simulation(self):
         """
         Runs the simulation for the specified number of Epochs.
         """
-        logger.info("\n--- Starting Simm ---")
+        logger.info("\n--- Starting Terminal Lifeform Sim ---")
 
         for t in tqdm(range(self.total_time_steps), desc="Simm Progress"):
+            print("\n")
             # Update current Epoch
             self.current_time = t
             logger.info(f"\n--- Epoch {self.current_time} ---")
-            time.sleep(0.11)  # Simulate time passing
+            time.sleep(0.25)  # Simulate time passing
             # Update global environment factors
             self._update_environment()
+
             logger.info(
-                f" {Fore.blue}Environment:{Style.reset} {Fore.green}Resources:{self.environment_factors['resource_availability']:.2f},  "
-                f"Temp:{self.environment_factors['temperature']:.1f}C, Pollution:{self.environment_factors['pollution']:.2f} {Style.reset}"
+                f" {Fore.blue}Environment:{Style.reset} {Fore.green} \
+                Resources:{self.environment_factors['resource_availability']:.2f},  "
+                f"Temp:{self.environment_factors['temperature']:.1f}C, \
+                 Pollution:{self.environment_factors['pollution']:.2f} {Style.reset}"
             )
 
             # Process each entity individually
@@ -310,9 +314,7 @@ class Simulation:
                 if entity.is_alive():
                     logger.info(f"{entity}")
                 else:
-                    logger.info(
-                        f"{Back.yellow} {entity.id} died. (Age:{entity.age}) {Style.reset} "
-                    )
+                    death_tracker(entity)
 
             # Remove dead entities
             self.entities = [entity for entity in self.entities if entity.is_alive()]
@@ -336,9 +338,11 @@ class Simulation:
                 break
 
         logger.info(f"\n--- Simulation Finished at Epoch {self.current_time} ---")
-        logger.info(f"Final Population: {len(self.entities)} entities remaining.")
-        for entity in self.entities:
-            logger.info(f"  {entity}")
+        logger.info(
+            f"Final Population: {len(self.entities)} entities remaining. Total created: {self.total_entities}"
+        )
+        # for entity in self.entities:
+        #     logger.info(f"  {entity}")
 
 
 if __name__ == "__main__":

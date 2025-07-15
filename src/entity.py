@@ -22,33 +22,28 @@ class Entity:
                            Examples: 'max_age', 'metabolism_rate', 'resilience'.
     """
 
-    def __init__(self, initial_parameters=None):
+    def __init__(self, initial_parameters: dict = None):
         """
         Initializes a new entity with default or provided parameters.
 
         Args:
-            initial_parameters (dict, optional): A dictionary of custom parameters
-                                                 for this entity. Defaults to None.
+            initial_parameters A dictionary of custom parameters for this entity. Defaults to None.
         """
-        self.id = str(uuid.uuid4())[:8]  # Short unique ID
+        self.id = str(uuid.uuid4())[:8]
         self.name = fake.last_name_nonbinary()
         self.age = 0
         self.health = 100.0
         self.energy = 100.0
         self.status = "alive"
-
-        # Default parameters for an entity type
         self.parameters = entity_params.copy()
+        self.health = self.parameters["initial_health"]
+        self.energy = self.parameters["initial_energy"]
 
         # Override default parameters with any provided initial_parameters
         if initial_parameters:
             self.parameters.update(initial_parameters)
 
-        self.health = self.parameters["initial_health"]
-        self.energy = self.parameters["initial_energy"]
-
     def is_alive(self):
-        """Checks if the entity is currently alive."""
         return self.status != "dead"
 
     def update_status(self):
@@ -57,8 +52,8 @@ class Entity:
         """
         if self.health <= 0 or self.age >= self.parameters["max_age"]:
             self.status = "dead"
-            self.health = 0.0  # Ensure health is 0 when dead
-            self.energy = 0.0  # Ensure energy is 0 when dead
+            self.health = 0.0
+            self.energy = 0.0
         elif (
             self.health >= self.parameters["thriving_threshold_health"]
             and self.energy >= self.parameters["thriving_threshold_energy"]
@@ -70,11 +65,10 @@ class Entity:
         ):
             self.status = "struggling"
         else:
-            self.status = "alive"  # Default status if not thriving, struggling, or dead
+            self.status = "alive"
 
     def __repr__(self):
-        """String representation of the entity."""
         return (
-            f"Entity(ID:{self.id}, {self.name} Age:{self.age}, Health:{self.health:.1f}, "
+            f"Entity({self.id}: {self.name} Age:{self.age}, Health:{self.health:.1f}, "
             f"Energy:{self.energy:.1f}, Status:'{self.status}')"
         )
