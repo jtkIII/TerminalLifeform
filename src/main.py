@@ -14,7 +14,13 @@ from params import (
     random_parameters,
     sim_env_params,
 )
-from stats import birth_tracker, death_tracker
+from stats import (
+    birth_tracker,
+    death_tracker,
+    disaster_tracker,
+    mutation_tracker,
+    update_totals,
+)
 
 logger = setup_logger(__name__)
 
@@ -121,12 +127,21 @@ class Simulation:
                     min(num_to_remove, alive_count),
                 )
 
+            removed_entities = []
+
             for entity in targets:
                 entity.health = 0  # Predator instantly kills
                 entity.update_status()  # Mark as dead
-                logger.info(
-                    f"{Style.BOLD}{Fore.cyan} Time {self.current_time}: \
-                     Dynamic Event - Predator! Entity {entity.id} was removed.{Style.reset}"
+                removed_entities.append(entity.name)
+                # logger.info(
+                #     f"{Style.BOLD}{Fore.cyan} Time {self.current_time}: \
+                #      Dynamic Event - Predator! Entity {entity.id} was removed.{Style.reset}"
+                # )
+
+                disaster_tracker(
+                    "Dynamic Event - Predator!",
+                    self.current_time,
+                    entity.name,
                 )
 
     def _process_entity(self, entity):
@@ -206,13 +221,9 @@ class Simulation:
                     )
                     # Note: Using debug level for frequent interaction logs to avoid overwhelming INFO level output
 
-    def _apply_mutation(self, params):
+    def _apply_mutation(self, params: dict) -> dict:
         """
         Applies slight random mutations to entity parameters.
-        Args:
-            params (dict): The dictionary of parameters to mutate.
-        Returns:
-            dict: The mutated parameters.
         """
         mutated_params = params.copy()
         mutation_rate = self.environment_factors["mutation_rate"]
@@ -244,10 +255,7 @@ class Simulation:
 
                 mutated_params[param_name] = new_value
 
-                logger.info(
-                    f" {Fore.magenta} {Style.BOLD} Mutation: Parameter '{param_name}' \
-                     changed from {original_value:.2f} to {new_value:.2f}{Style.reset}"
-                )
+                mutation_tracker(param_name, original_value, new_value)
 
         return mutated_params
 
@@ -284,11 +292,13 @@ class Simulation:
         Runs the simulation for the specified number of Epochs.
         """
         logger.info("\n--- Starting Terminal Lifeform Sim ---")
+        self.count = 0
 
         for t in tqdm(range(self.total_time_steps), desc="Simm Progress"):
             print("\n")
             # Update current Epoch
             self.current_time = t
+            self.count += 1
             logger.info(f"\n--- Epoch {self.current_time} ---")
             time.sleep(0.25)  # Simulate time passing
             # Update global environment factors
@@ -300,6 +310,9 @@ class Simulation:
                 f"Temp:{self.environment_factors['temperature']:.1f}C, \
                  Pollution:{self.environment_factors['pollution']:.2f} {Style.reset}"
             )
+
+            if self.count % 10 == 0:
+                time.sleep(0.75)  # Simulate time passing
 
             # Process each entity individually
             for entity in self.entities:
@@ -338,17 +351,16 @@ class Simulation:
                 break
 
         logger.info(f"\n--- Simulation Finished at Epoch {self.current_time} ---")
-        logger.info(
-            f"Final Population: {len(self.entities)} entities remaining. Total created: {self.total_entities}"
+
+        update_totals(
+            self.total_entities, len(self.entities), struggling_count, thriving_count
         )
-        # for entity in self.entities:
-        #     logger.info(f"  {entity}")
 
 
 if __name__ == "__main__":
     my_simulation = Simulation(
         initial_entities=150,
-        time_steps=250,
+        time_steps=500,
         environment_params=sim_env_params,
     )
 
@@ -356,9 +368,9 @@ if __name__ == "__main__":
     my_simulation.add_entity(Entity(hardy_entity_params))
     my_simulation.add_entity(Entity(hardy_entity_params))
     my_simulation.add_entity(Entity(random_parameters))
-    my_simulation.add_entity(Entity(random_parameters))
+    # my_simulation.add_entity(Entity(random_parameters))
     my_simulation.add_entity(Entity(max_parameters))
-    my_simulation.add_entity(Entity(max_parameters))
+    # my_simulation.add_entity(Entity(max_parameters))
 
     # Run the simulation
     my_simulation.run_simulation()

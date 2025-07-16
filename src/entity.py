@@ -1,11 +1,12 @@
 # filepath: /home/jtk/Dev/TerminalLifeform/src/entity.py
+import random
 import uuid
 
 from faker import Faker
 
 from params import entity_params
 
-fake = Faker(["it_IT", "en_US", "ja_JP"])
+fake = Faker(["it_IT", "en_US", "en_GB", "en_NZ"])
 
 
 class Entity:
@@ -30,23 +31,26 @@ class Entity:
             initial_parameters A dictionary of custom parameters for this entity. Defaults to None.
         """
         self.id = str(uuid.uuid4())[:8]
-        self.name = fake.last_name_nonbinary()
         self.age = 0
-        self.health = 100.0
-        self.energy = 100.0
         self.status = "alive"
         self.parameters = entity_params.copy()
-        self.health = self.parameters["initial_health"]
-        self.energy = self.parameters["initial_energy"]
+
+        if random.uniform(1, 3) % 2 == 0:
+            self.name = fake.first_name_nonbinary()
+        else:
+            self.name = fake.last_name_nonbinary()
 
         # Override default parameters with any provided initial_parameters
         if initial_parameters:
             self.parameters.update(initial_parameters)
 
-    def is_alive(self):
+        self.health = self.parameters["initial_health"]
+        self.energy = self.parameters["initial_energy"]
+
+    def is_alive(self) -> bool:
         return self.status != "dead"
 
-    def update_status(self):
+    def update_status(self) -> None:
         """
         Updates the entity's status based on its current health and energy.
         """
@@ -67,7 +71,7 @@ class Entity:
         else:
             self.status = "alive"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"Entity({self.id}: {self.name} Age:{self.age}, Health:{self.health:.1f}, "
             f"Energy:{self.energy:.1f}, Status:'{self.status}')"
