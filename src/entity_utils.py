@@ -16,7 +16,7 @@ def calc_energy_change(entity: Entity, environment_factors: dict) -> float:
     resource_availability = environment_factors.get("resource_availability", 1.0)
     foraging_efficiency = entity.parameters.get("foraging_efficiency", 1.0)
 
-    energy_gained = resource_availability * foraging_efficiency * 2.0  # scale as needed
+    energy_gained = resource_availability * foraging_efficiency * 1.8  # scale as needed
 
     # Starvation penalty (inefficiency when resources are low)
     if resource_availability < 1.0:
@@ -51,11 +51,11 @@ def calc_health_change(entity: Entity, environment_factors: dict) -> float:
 
     # Pollution penalty
     if pollution > 0.1:
-        pollution_penalty = pollution * (1.0 - resilience) * 5.0
+        pollution_penalty = pollution * (1.3 - resilience) * 5.0
         health_change -= pollution_penalty
 
     # Finally just age-related decay
-    health_change -= 0.01 * (entity.age**1.2)  # Exponential decay with age
+    health_change -= 0.01 * (entity.age**1.3)  # Exponential decay with age
     # Uncomment the line below for a linear decay with age
     # health_change -= entity.age * 0.01  # Linear decay with age stable
 

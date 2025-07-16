@@ -360,7 +360,7 @@ class Simulation:
 if __name__ == "__main__":
     my_simulation = Simulation(
         initial_entities=150,
-        time_steps=500,
+        time_steps=750,
         environment_params=sim_env_params,
     )
 
