@@ -55,7 +55,7 @@ def calc_health_change(entity: Entity, environment_factors: dict) -> float:
         health_change -= pollution_penalty
 
     # Finally just age-related decay
-    health_change -= 0.01 * (entity.age**1.3)  # Exponential decay with age
+    health_change -= 0.01 * (entity.age**1.25)  # Exponential decay with age
     # Uncomment the line below for a linear decay with age
     # health_change -= entity.age * 0.01  # Linear decay with age stable
 
